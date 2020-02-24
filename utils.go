@@ -16,8 +16,19 @@ func generateDSN(options Options) string {
 		query.Add(key, value)
 	}
 	connectionParams := query.Encode()
+	var dsnFormat string
+	switch options.Driver {
+	case DriverPostgreSQL:
+		dsnFormat = "postgresql://%s:%s@%s:%v/%s?%s"
+	case DriverMSSQL:
+		dsnFormat = "sqlserver://%s:%s@%s:%v/%s?%s"
+	case DriverMySQL:
+		fallthrough
+	default:
+		dsnFormat = "%s:%s@tcp(%s:%v)/%s?%s"
+	}
 	return strings.Trim(fmt.Sprintf(
-		"%s:%s@tcp(%s:%v)/%s?%s",
+		dsnFormat,
 		options.Username,
 		options.Password,
 		options.Hostname,
@@ -25,4 +36,14 @@ func generateDSN(options Options) string {
 		options.Database,
 		connectionParams,
 	), "/")
+}
+
+func stringNotSet(test string) bool {
+	var zeroValue string
+	return test == zeroValue
+}
+
+func uint16NotSet(test uint16) bool {
+	var zeroValue uint16
+	return test == zeroValue
 }

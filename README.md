@@ -4,6 +4,12 @@
 
 A Go package to handle database connections.
 
+Currently supports databases utilising the following protocols:
+
+1. MySQL
+2. PostgreSQL
+3. MSSQL
+
 - [DB](#db)
   - [Usage](#usage)
     - [Importing](#importing)

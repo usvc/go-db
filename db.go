@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"fmt"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 var (
 	// SupportedDrivers is a list of driver names which the `db` package supports
-	SupportedDrivers = []string{"mysql"}
+	SupportedDrivers = []string{DriverMySQL, DriverPostgreSQL, DriverMSSQL}
 	// connection is the singleton instance for the database connection
 	connection = map[string]*sql.DB{}
 )
