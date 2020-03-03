@@ -1,42 +1,72 @@
 image: golang:1.13
 stages:
-  - test
-  - build
+  - init
+  - test & build
   - release
   - package
   - publish
 
-test:
-  stage: test
+init:
+  stage: init
+  image: usvc/ci:go-dependencies
   cache:
     key: ${CI_PROJECT_REF}_${CI_COMMIT_REF_NAME}
-    paths:
-      - ./vendor
+    paths: ["./vendor"]
   artifacts:
-    expire_in: 1 day
-    paths:
-      - ./vendor
-      - ./c.out
-  before_script:
-    - apt-get update
-    - apt-get install -y make g++
-  script:
-    - make deps
-    - make test
+    paths: ["./vendor"]
+  script: ["entrypoint"]
 
-build:
-  stage: build
+unit test:
+  stage: test & build
+  image: usvc/ci:go-test
+  dependencies: ["init"]
   artifacts:
-    expire_in: 1 day
-    paths:
-      - ./bin/*
-  before_script:
-    - apt-get update
-    - apt-get install -y make git g++ upx
-  script:
-    - GOOS=linux GOARCH=amd64 make build_production
-    - GOOS=darwin GOARCH=amd64 make build_production
-    - GOOS=windows GOARCH=386 BIN_EXT=.exe make build_production
+    paths: ["./c.out"]
+  script: ["entrypoint"]
+
+.build:
+  image: usvc/ci:go-build-production
+  stage: test & build
+  dependencies: ["init"]
+  artifacts:
+    paths: ["./bin/*"]
+  variables:
+    BIN_NAME: db
+  before_script: ["git fetch"]
+  script: ["entrypoint"]
+.build_linux:
+  extends: .build
+  variables:
+    GOOS: linux
+    GOARCH: amd64
+build linux (test):
+  extends: .build_linux
+  only: ["master"]
+build linux:
+  extends: .build_linux
+  only: ["tags"]
+.build_macos:
+  extends: .build
+  variables:
+    GOOS: darwin
+    GOARCH: amd64
+build macos (test):
+  extends: .build_macos
+  only: ["master"]
+build macos:
+  extends: .build_macos
+  only: ["tags"]
+.build_windows:
+  extends: .build
+  variables:
+    GOOS: windows
+    GOARCH: "386"
+build windows (test):
+  extends: .build_windows
+  only: ["master"]
+build windows:
+  extends: .build_windows
+  only: ["tags"]
 
 version bump:
   stage: release

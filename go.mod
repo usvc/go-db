@@ -1,4 +1,4 @@
-module github.com/usvc/db
+module github.com/usvc/go-db
 
 go 1.13
 

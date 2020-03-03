@@ -29,7 +29,7 @@ Currently supports databases utilising the following protocols:
 ### Importing
 
 ```go
-import "github.com/usvc/db"
+import "github.com/usvc/go-db"
 ```
 
 ### Creating a new database connection
