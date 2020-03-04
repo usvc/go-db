@@ -1,5 +1,7 @@
 # DB
 
+[![release github](https://img.shields.io/github/v/release/usvc/go-db?sort=semver)](https://github.com/usvc/go-db)
+
 [![pipeline status](https://gitlab.com/usvc/modules/go/db/badges/master/pipeline.svg)](https://gitlab.com/usvc/modules/go/db/-/commits/master)
 
 A Go package to handle database connections.
