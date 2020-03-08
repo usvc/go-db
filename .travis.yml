@@ -1,0 +1,28 @@
+sudo: required
+git:
+  submodules: true
+  quiet: false
+language: go
+go:
+  - 1.14.x
+if: tag IS present
+deploy:
+  provider: releases
+  api_key: "${RELEASE_TOKEN}"
+  file_glob: true
+  file: ./bin/*
+  skip_cleanup: true
+  on:
+    branch: master
+    tags: true
+before_script:
+  - sudo apt-get update
+  - sudo apt-get install -y make git g++ upx
+script:
+  - make deps
+  - GOOS=linux GOARCH=amd64 make build_production
+  - GOOS=darwin GOARCH=amd64 make build_production
+  - GOOS=windows GOARCH=386 BIN_EXT=.exe make build_production
+  - GOOS=linux GOARCH=amd64 make compress_production || true
+  - GOOS=darwin GOARCH=amd64 make compress_production || true
+  - GOOS=windows GOARCH=386 BIN_EXT=.exe make compress_production || true

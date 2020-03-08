@@ -1,8 +1,8 @@
 # DB
 
-[![release github](https://img.shields.io/github/v/release/usvc/go-db?sort=semver)](https://github.com/usvc/go-db)
-
+[![latest release](https://badge.fury.io/gh/usvc%2Fgo-db.svg)](https://github.com/usvc/go-db/releases)
 [![pipeline status](https://gitlab.com/usvc/modules/go/db/badges/master/pipeline.svg)](https://gitlab.com/usvc/modules/go/db/-/commits/master)
+[![release status](https://travis-ci.org/usvc/go-db.svg?branch=master)](https://travis-ci.org/usvc/go-db)
 
 A Go package to handle database connections.
 
@@ -11,6 +11,11 @@ Currently supports databases utilising the following protocols:
 1. MySQL
 2. PostgreSQL
 3. MSSQL
+
+| | |
+| --- | --- |
+| Github | [https://github.com/usvc/go-db](https://github.com/usvc/go-db) |
+| Gitlab | [https://gitlab.com/usvc/modules/go/db](https://gitlab.com/usvc/modules/go/db) |
 
 - [DB](#db)
   - [Usage](#usage)

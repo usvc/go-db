@@ -14,18 +14,23 @@ build:
 	go build -o ./bin/$(CMD_ROOT) ./cmd/$(CMD_ROOT)_${GOOS}_${GOARCH}
 build_production:
 	CGO_ENABLED=0 \
-	go build \
-		-a -v \
-		-ldflags "-X main.Commit=$$(git rev-parse --verify HEAD) \
-			-X main.Version=$$(git describe --tag $$(git rev-list --tags --max-count=1)) \
-			-X main.Timestamp=$$(date +'%Y%m%d%H%M%S') \
+	go build -a -v \
+		-ldflags "-X main.Commit=$(GIT_COMMIT) \
+			-X main.Version=$(GIT_TAG) \
+			-X main.Timestamp=$(TIMESTAMP) \
 			-extldflags 'static' \
 			-s -w" \
 		-o ./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT} \
 		./cmd/$(CMD_ROOT)
-	rm -rf ./bin/$(CMD_ROOT)
-	ln -s $$(pwd)/bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT} \
-		./bin/$(CMD_ROOT)
+compress_production:
+	ls -lah ./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
+	upx -9 -v -o ./bin/.$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT} \
+		./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
+	upx -t ./bin/.$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
+	rm -rf ./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
+	mv ./bin/.$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT} \
+		./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
+	ls -lah ./bin/$(CMD_ROOT)_$$(go env GOOS)_$$(go env GOARCH)${BIN_EXT}
 
 package:
 	docker build --file ./deploy/Dockerfile --tag $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest .
