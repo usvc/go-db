@@ -6,6 +6,13 @@ CMD_ROOT=db
 deps:
 	go mod vendor -v
 	go mod tidy -v
+dev:
+	USER_ID=$$(id -u) docker-compose -f ./deploy/dev/docker-compose.yaml up -d
+	docker-compose -f ./deploy/dev/docker-compose.yaml logs -f
+dev_stop:
+	docker-compose -f ./deploy/dev/docker-compose.yaml down
+dev_clean: dev_stop
+	docker-compose -f ./deploy/dev/docker-compose.yaml rm
 run:
 	go run ./cmd/$(CMD_ROOT)
 test:

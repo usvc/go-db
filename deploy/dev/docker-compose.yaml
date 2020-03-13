@@ -1,0 +1,36 @@
+version: "3.5"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: usvc_mysql
+    deploy:
+      resources:
+        limits:
+          cpus: '0.4'
+          memory: 64Mi
+        reservations:
+          cpus: '0.2'
+          memory: 32Mi
+    command:
+      - "mysqld"
+      - "--sql-mode=STRICT_ALL_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION,NO_AUTO_VALUE_ON_ZERO"
+      - "--init-connect=SET collation_connection = utf8mb4_unicode_ci"
+      - "--max-allowed-packet=8M"
+      - "--innodb-ft-min-token-size=2"
+      - "--character-set-server=utf8mb4"
+      - "--collation-server=utf8mb4_unicode_ci"
+      - "--event-scheduler=ON"
+      - "--default-time-zone=+00:00"
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: database
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - target: 3306
+        published: 3306
+        protocol: tcp
+        mode: host
+    user: "${USER_ID:-root}"
+    volumes:
+      - "${DATA_ROOT:-.}/data/mysql:/var/lib/mysql"
