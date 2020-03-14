@@ -113,9 +113,9 @@ func (m *Migration) Validate(tableName string, connection *sql.DB) error {
 	if remoteMigration.Error != nil && len(*remoteMigration.Error) > 0 {
 		return fmt.Errorf("[validate:%s] migration exists but has been recorded as failed: '%s'", m.Name, *remoteMigration.Error)
 	} else if NormalizeQuery(m.Up) != NormalizeQuery(remoteMigration.Up) {
-		return fmt.Errorf("[validate:%s] failed to reconcile local and remote versions:\n%s\n--\n%s", m.Name, m.Up, remoteMigration.Up)
+		return fmt.Errorf("[validate:%s] failed to reconcile upward migration query local and remote versions:\n%s\n--\n%s", m.Name, m.Up, remoteMigration.Up)
 	} else if NormalizeQuery(m.Down) != NormalizeQuery(remoteMigration.Down) {
-		return fmt.Errorf("[validate:%s] failed to reconcile local and remote versions:\n%s\n--\n%s", m.Name, m.Down, remoteMigration.Down)
+		return fmt.Errorf("[validate:%s] failed to reconcile downward migration query local and remote versions:\n%s\n--\n%s", m.Name, m.Down, remoteMigration.Down)
 	}
 	return nil
 }

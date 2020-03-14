@@ -19,6 +19,12 @@ init:
 unit test:
   stage: test & build
   image: usvc/ci:go-test
+  services:
+    - mysql:5.7
+  variables:
+    MYSQL_HOSTNAME: mysql
+    MYSQL_DATABASE: database
+    MYSQL_ROOT_PASSWORD: toor
   dependencies: ["init"]
   artifacts:
     paths: ["./c.out"]

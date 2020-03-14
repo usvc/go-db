@@ -61,6 +61,26 @@ func getDBOptions() db.Options {
 func main() {
 	conf.ApplyToCobra(rootCommand)
 	rootCommand.AddCommand(&cobra.Command{
+		Use: "check",
+		Run: func(cmd *cobra.Command, args []string) {
+			db.Init(getDBOptions())
+			connection := db.Get()
+			stmt, err := connection.Prepare("SHOW TABLES")
+			if err != nil {
+				panic(err)
+			}
+			rows, err := stmt.Query()
+			if err != nil {
+				panic(err)
+			}
+			for rows.Next() {
+				var tableName string
+				rows.Scan(&tableName)
+				fmt.Println(tableName)
+			}
+		},
+	})
+	rootCommand.AddCommand(&cobra.Command{
 		Use: "init",
 		Run: func(cmd *cobra.Command, args []string) {
 			db.Init(getDBOptions())
