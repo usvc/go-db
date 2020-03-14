@@ -32,5 +32,3 @@ services:
         protocol: tcp
         mode: host
     user: "${USER_ID:-root}"
-    volumes:
-      - "${DATA_ROOT:-.}/data/mysql:/var/lib/mysql"

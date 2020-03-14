@@ -38,6 +38,43 @@ func New(name, up, down string) *Migration {
 	}
 }
 
+func NewFromDB(name, tableName string, connection *sql.DB) (*Migration, error) {
+	migration := Migration{}
+	stmt, err := connection.Prepare(fmt.Sprintf(
+		`SELECT
+			id,
+			name,
+			up,
+			down,
+			error,
+			status,
+			applied_at,
+			created_at
+			FROM %s
+				WHERE name = ?`,
+		tableName,
+	))
+	if err != nil {
+		return nil, fmt.Errorf("failed to prepare query for retrieving migration entry: '%s'", err)
+	}
+	if err := stmt.QueryRow(name).Scan(
+		&migration.ID,
+		&migration.Name,
+		&migration.Up,
+		&migration.Down,
+		&migration.Error,
+		&migration.Status,
+		&migration.AppliedAt,
+		&migration.CreatedAt,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return nil, err
+		}
+		return nil, fmt.Errorf("failed to retrieve row from database for migration '%s': '%s'", name, err)
+	}
+	return &migration, nil
+}
+
 func NewFromFile(name, upFilePath, downFilePath string) (*Migration, error) {
 	upFileContents, err := ioutil.ReadFile(upFilePath)
 	if err != nil {

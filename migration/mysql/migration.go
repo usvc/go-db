@@ -6,10 +6,6 @@ import (
 	"time"
 )
 
-const (
-	DefaultTransactionTimeout = 15 * time.Second
-)
-
 type Migration struct {
 	// ID will contain the database-assigned auto-incremented ID of the migration
 	ID int64 `json:"id" yaml:"id"`
@@ -46,15 +42,8 @@ func (m *Migration) Apply(tableName string, connection *sql.DB) error {
 	}
 	_, err = stmt.Exec()
 	if err != nil {
-		stmt, err2 := connection.Prepare(fmt.Sprintf(
-			"UPDATE %s SET error = ? WHERE id = ?", tableName,
-		))
-		if err2 != nil {
-			return fmt.Errorf("[apply:%s] failed to prepare query to set error column: '%s' > '%s'", m.Name, err, err2)
-		}
-		_, err2 = stmt.Exec(err.Error(), m.ID)
-		if err2 != nil {
-			return fmt.Errorf("[apply:%s] failed to set error column: '%s' > '%s'", m.Name, err, err2)
+		if setErrorErr := m.setError(err, tableName, connection); setErrorErr != nil {
+			return fmt.Errorf("[apply:%s] failed to apply migration: '%s'", m.Name, setErrorErr)
 		}
 		return fmt.Errorf("[apply:%s] failed to apply migration: '%s'", m.Name, err)
 	}
@@ -100,64 +89,26 @@ func (m *Migration) Rollback(tableName string, connection *sql.DB) error {
 		}
 		return fmt.Errorf("[rollback:%s] failed to rollback migration: '%s'", m.Name, err)
 	}
-	stmt, err = connection.Prepare(fmt.Sprintf(
-		`DELETE FROM %s WHERE name = ?`, tableName,
-	))
-	if err != nil {
-		return fmt.Errorf("[rollback:%s] failed to prepare query for removal of migration entry from migrations table: '%s'", m.Name, err)
-	}
-	_, err = stmt.Exec(m.Name)
-	if err != nil {
-		return fmt.Errorf("[rollback:%s] failed to remove migration entry from migrations table: '%s'", m.Name, err)
+	if err := m.delete(tableName, connection); err != nil {
+		return fmt.Errorf("[rollback:%s] failed to remove migration table entry: '%s'", m.Name, err)
 	}
 	return nil
 }
 
 func (m *Migration) Resolve(tableName string, connection *sql.DB) error {
-	stmt, err := connection.Prepare(fmt.Sprintf(
-		`DELETE FROM %s WHERE name = ?`,
-		tableName,
-	))
-	if err != nil {
-		return fmt.Errorf("[resolve:%s] failed to prepare query for resolving migration error: '%s'", m.Name, err)
-	}
-	if _, err = stmt.Exec(m.Name); err != nil {
+	if err := m.delete(tableName, connection); err != nil {
 		return fmt.Errorf("[resolve:%s] failed to resolve migration error: '%s'", m.Name, err)
 	}
 	return nil
 }
 
 func (m *Migration) Validate(tableName string, connection *sql.DB) error {
-	remoteMigration := Migration{}
-	stmt, err := connection.Prepare(fmt.Sprintf(
-		`SELECT
-			id,
-			name,
-			up,
-			down,
-			error,
-			applied_at,
-			created_at
-			FROM %s
-				WHERE name = ?`,
-		tableName,
-	))
+	remoteMigration, err := NewFromDB(m.Name, tableName, connection)
 	if err != nil {
-		return fmt.Errorf("[validate:%s] failed to prepare migration validation sql: '%s'", m.Name, err)
-	}
-	if err := stmt.QueryRow(m.Name).Scan(
-		&remoteMigration.ID,
-		&remoteMigration.Name,
-		&remoteMigration.Up,
-		&remoteMigration.Down,
-		&remoteMigration.Error,
-		&remoteMigration.AppliedAt,
-		&remoteMigration.CreatedAt,
-	); err != nil {
 		if err == sql.ErrNoRows {
-			return nil
+			return NoErrDoesNotExist
 		}
-		return fmt.Errorf("[validate:%s] failed to retrieve entry in migrations table: '%s'", m.Name, err)
+		return fmt.Errorf("[validate:%s] failed to retrieve migration entry: %s", m.Name, err)
 	}
 	if remoteMigration.Error != nil && len(*remoteMigration.Error) > 0 {
 		return fmt.Errorf("[validate:%s] migration exists but has been recorded as failed: '%s'", m.Name, *remoteMigration.Error)
@@ -165,6 +116,20 @@ func (m *Migration) Validate(tableName string, connection *sql.DB) error {
 		return fmt.Errorf("[validate:%s] failed to reconcile local and remote versions:\n%s\n--\n%s", m.Name, m.Up, remoteMigration.Up)
 	} else if NormalizeQuery(m.Down) != NormalizeQuery(remoteMigration.Down) {
 		return fmt.Errorf("[validate:%s] failed to reconcile local and remote versions:\n%s\n--\n%s", m.Name, m.Down, remoteMigration.Down)
+	}
+	return nil
+}
+
+func (m *Migration) delete(tableName string, connection *sql.DB) error {
+	stmt, err := connection.Prepare(fmt.Sprintf(
+		`DELETE FROM %s WHERE name = ?`, tableName,
+	))
+	if err != nil {
+		return fmt.Errorf("failed to prepare query to delete migration entry: '%s'", err)
+	}
+	_, err = stmt.Exec(m.Name)
+	if err != nil {
+		return fmt.Errorf("failed to delete migration entry: '%s'", err)
 	}
 	return nil
 }
@@ -199,6 +164,20 @@ func (m *Migration) insert(tableName string, connection *sql.DB) error {
 	m.ID, err = res.LastInsertId()
 	if err != nil {
 		return fmt.Errorf("[apply:%s] failed to get id of newly inserted row in the migrations table '%s': '%s'", m.Name, tableName, err)
+	}
+	return nil
+}
+
+func (m *Migration) setError(originalError error, tableName string, connection *sql.DB) error {
+	stmt, updateError := connection.Prepare(fmt.Sprintf(
+		"UPDATE %s SET error = ? WHERE id = ?", tableName,
+	))
+	if updateError != nil {
+		return fmt.Errorf("failed to prepare query to set error column to '%s': '%s'", originalError, updateError)
+	}
+	_, updateError = stmt.Exec(originalError.Error(), m.ID)
+	if updateError != nil {
+		return fmt.Errorf("failed to set error column to '%s': '%s'", originalError, updateError)
 	}
 	return nil
 }
