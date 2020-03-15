@@ -1,0 +1,1 @@
+CREATE TABLE b (id INTEGER) Engine=InnoDB;

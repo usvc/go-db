@@ -90,6 +90,19 @@ func (s *MigrationTests) TestApply_error() {
 	s.Contains(err.Error(), "there can be only one auto column")
 }
 
+func (s *MigrationTests) TestResolve() {
+	migration := Migration{
+		Name: "test_resolve",
+		Up:   "CREATE TABLE test_resolve (id INTEGER AUTO_INCREMENT) Engine=InnoDB;",
+		Down: "DROP TABLE test_resolve",
+	}
+	err := migration.Apply(s.migrationTable, s.connection)
+	s.NotNil(err)
+	err = migration.Resolve(s.migrationTable, s.connection)
+	s.Nil(err)
+
+}
+
 func (s *MigrationTests) TestRollback() {
 	migration := Migration{
 		Name: "test_rollback",

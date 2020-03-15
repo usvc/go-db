@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"path"
 	"strings"
 )
 
@@ -28,6 +29,51 @@ func Init(tableName string, connection *sql.DB) error {
 		return err
 	}
 	return nil
+}
+
+func stringEndsWith(test, postfix string) bool {
+	if strings.Index(test, postfix) == len(test)-len(postfix) {
+		return true
+	}
+	return false
+}
+
+func stringSliceContains(test []string, item string) bool {
+	for i := 0; i < len(test); i++ {
+		if test[i] == item {
+			return true
+		}
+	}
+	return false
+}
+
+func GetMigrationNamesFromFilenames(filenameList []string) ([]string, []error) {
+	var acceptedFilenames []string
+	var rejectedFilenames []error
+	for i := 0; i < len(filenameList); i++ {
+		var filenameWithoutExtension string
+		filename := filenameList[i]
+		if stringEndsWith(filename, ".up.sql") {
+			filenameWithoutExtension = filename[:len(filename)-len(".up.sql")]
+		} else if stringEndsWith(filename, ".down.sql") {
+			filenameWithoutExtension = filename[:len(filename)-len(".down.sql")]
+		} else {
+			rejectedFilenames = append(rejectedFilenames, fmt.Errorf("filename %s does not end with .{up, down}.sql", filename))
+			continue
+		}
+		if !stringSliceContains(acceptedFilenames, filenameWithoutExtension) {
+			if stringSliceContains(filenameList, filenameWithoutExtension+".up.sql") &&
+				stringSliceContains(filenameList, filenameWithoutExtension+".down.sql") {
+				acceptedFilenames = append(acceptedFilenames, filenameWithoutExtension)
+			} else {
+				rejectedFilenames = append(rejectedFilenames, fmt.Errorf("could not find reverse migration for %s", filename))
+			}
+		}
+	}
+	if len(rejectedFilenames) > 0 {
+		return acceptedFilenames, rejectedFilenames
+	}
+	return acceptedFilenames, nil
 }
 
 func New(name, up, down string) *Migration {
@@ -85,6 +131,39 @@ func NewFromFile(name, upFilePath, downFilePath string) (*Migration, error) {
 		return nil, err
 	}
 	return New(name, string(upFileContents), string(downFileContents)), nil
+}
+
+func NewFromDirectory(directoryPath string) (Migrations, error) {
+	directoryListing, err := ioutil.ReadDir(directoryPath)
+	if err != nil {
+		return nil, err
+	}
+	var filenames []string
+	for i := 0; i < len(directoryListing); i++ {
+		file := directoryListing[i]
+		filenames = append(filenames, file.Name())
+	}
+	filenames, errs := GetMigrationNamesFromFilenames(filenames)
+	var migrations Migrations
+	for i := 0; i < len(filenames); i++ {
+		filename := filenames[i]
+		migration, err := NewFromFile(filename, path.Join(directoryPath, filename+".up.sql"), path.Join(directoryPath, filename+".down.sql"))
+		if err != nil {
+			errs = append(errs, err)
+			continue
+		}
+		migrations = append(migrations, migration)
+	}
+	if errs != nil {
+		var errString strings.Builder
+		for i := 0; i < len(errs); i++ {
+			err = errs[i]
+			errString.WriteString("\n")
+			errString.WriteString(err.Error())
+		}
+		return migrations, fmt.Errorf("following errors/warnings happened: %s", errString.String())
+	}
+	return migrations, nil
 }
 
 func NormalizeQuery(query string) string {
