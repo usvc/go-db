@@ -79,3 +79,8 @@ version bump:
   only: ["master"]
   image: usvc/ci:version-bump-gitlab
   script: ["entrypoint"]
+
+coverage report:
+  stage: release
+  image: usvc/ci:go-coverage-code-climate
+  script: ["entrypoint"]
