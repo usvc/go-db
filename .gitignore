@@ -1,4 +1,5 @@
 .ssh
 bin
+coverage
 c.out
 vendor
