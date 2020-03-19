@@ -170,7 +170,7 @@ func (s *UtilsTests) Test_stringEndsWith() {
 	s.False(stringEndsWith("a.sql", ".up.sql"))
 	s.False(stringEndsWith("a.up", ".up.sql"))
 	s.False(stringEndsWith("a", ".up.sql"))
-	s.False(stringEndsWith("Makefile", ".down.sql"))
+	s.False(stringEndsWith("Makefile", ".up.sql"))
 }
 
 func (s *UtilsTests) Test_stringSliceContains() {
