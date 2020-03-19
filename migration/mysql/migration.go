@@ -38,6 +38,9 @@ func (m *Migration) Apply(tableName string, connection *sql.DB) error {
 	}
 	stmt, err := connection.Prepare(m.Up)
 	if err != nil {
+		if setErrorErr := m.setError(err, tableName, connection); setErrorErr != nil {
+			return fmt.Errorf("[apply:%s] failed to prepare migration: '%s'", m.Name, setErrorErr)
+		}
 		return fmt.Errorf("[apply:%s] failed to prepare migration: '%s'", m.Name, err)
 	}
 	_, err = stmt.Exec()

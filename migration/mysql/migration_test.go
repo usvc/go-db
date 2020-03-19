@@ -78,16 +78,27 @@ func (s *MigrationTests) TestApply() {
 	s.Nil(err)
 }
 
-func (s *MigrationTests) TestApply_error() {
+func (s *MigrationTests) TestApply_error_preparation() {
+	migration := Migration{
+		Name: "test_apply_error",
+		Up:   "CREATE TABLE test_apply_error (id,) Engine=InnoDB;",
+		Down: "DROP TABLE test_apply",
+	}
+	err := migration.Apply(s.migrationTable, s.connection)
+	s.NotNil(err)
+	if err != nil {
+		s.Contains(err.Error(), "failed to prepare migration")
+	}
+}
+
+func (s *MigrationTests) TestApply_error_application() {
 	migration := Migration{
 		Name: "test_apply_error",
 		Up:   "CREATE TABLE test_apply_error (id INTEGER AUTO_INCREMENT) Engine=InnoDB;",
 		Down: "DROP TABLE test_apply",
 	}
 	err := migration.Apply(s.migrationTable, s.connection)
-	s.Contains(err.Error(), "there can be only one auto column")
-	err = migration.Validate(s.migrationTable, s.connection)
-	s.Contains(err.Error(), "there can be only one auto column")
+	s.Contains(err.Error(), "failed to apply migration")
 }
 
 func (s *MigrationTests) TestResolve() {
@@ -139,7 +150,7 @@ func (s *MigrationTests) TestValidate() {
 	s.Nil(err)
 }
 
-func (s *MigrationTests) TestValidate_error() {
+func (s *MigrationTests) TestValidate_error_application() {
 	up := "CREATE TABLE test_validate_error (id INTEGER) Engine=InnoDB;"
 	down := "DROP TABLE test_validate_error;"
 	migration := Migration{
@@ -157,4 +168,22 @@ func (s *MigrationTests) TestValidate_error() {
 	migration.Down = "DROP TABLE test_validate;"
 	err = migration.Validate(s.migrationTable, s.connection)
 	s.Contains(err.Error(), "failed to reconcile downward migration query")
+}
+
+func (s *MigrationTests) TestValidate_error_preparation() {
+	migration := Migration{
+		Name: "test_validate_error",
+		Up:   "CREATE TABLE test_validate_error (,) Engine=InnoDB;",
+		Down: "DROP TABLE test_validate_error;",
+	}
+	err := migration.Apply(s.migrationTable, s.connection)
+	s.NotNil(err)
+	if err != nil {
+		s.Contains(err.Error(), "failed to prepare migration")
+	}
+	err = migration.Validate(s.migrationTable, s.connection)
+	s.NotNil(err)
+	if err != nil {
+		s.Contains(err.Error(), "exists but has been recorded as failed")
+	}
 }
