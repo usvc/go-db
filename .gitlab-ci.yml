@@ -81,6 +81,7 @@ version bump:
   script: ["entrypoint"]
 
 coverage report:
+  allow_failure: true
   stage: release
   dependencies: ["unit test"]
   image: usvc/ci:go-coverage-code-climate

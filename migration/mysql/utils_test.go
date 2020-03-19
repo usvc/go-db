@@ -164,3 +164,17 @@ func (s *UtilsTests) TestNewFromDirectory_error() {
 	s.Contains(err.Error(), "not an sql file")
 	s.Len(migrations, 1)
 }
+
+func (s *UtilsTests) Test_stringEndsWith() {
+	s.True(stringEndsWith("a.up.sql", ".up.sql"))
+	s.False(stringEndsWith("a.sql", ".up.sql"))
+	s.False(stringEndsWith("a.up", ".up.sql"))
+	s.False(stringEndsWith("a", ".up.sql"))
+	s.False(stringEndsWith("Makefile", ".down.sql"))
+}
+
+func (s *UtilsTests) Test_stringSliceContains() {
+	s.True(stringSliceContains([]string{"a", "b"}, "b"))
+	s.True(stringSliceContains([]string{"a", "b"}, "a"))
+	s.False(stringSliceContains([]string{"a", "b"}, "c"))
+}

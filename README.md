@@ -1,8 +1,8 @@
 # DB
 
 [![latest release](https://badge.fury.io/gh/usvc%2Fgo-db.svg)](https://github.com/usvc/go-db/releases)
-[![pipeline status](https://gitlab.com/usvc/modules/go/db/badges/master/pipeline.svg)](https://gitlab.com/usvc/modules/go/db/-/commits/master)
 [![release status](https://travis-ci.org/usvc/go-db.svg?branch=master)](https://travis-ci.org/usvc/go-db)
+[![pipeline status](https://gitlab.com/usvc/modules/go/db/badges/master/pipeline.svg)](https://gitlab.com/usvc/modules/go/db/-/commits/master)
 [![test coverage](https://api.codeclimate.com/v1/badges/90b27fd4714b0ce75111/test_coverage)](https://codeclimate.com/github/usvc/go-db/test_coverage)
 [![maintainability](https://api.codeclimate.com/v1/badges/90b27fd4714b0ce75111/maintainability)](https://codeclimate.com/github/usvc/go-db/maintainability)
 

@@ -32,7 +32,8 @@ func Init(tableName string, connection *sql.DB) error {
 }
 
 func stringEndsWith(test, postfix string) bool {
-	if strings.Index(test, postfix) == len(test)-len(postfix) {
+	startIndexOfPostfix := strings.Index(test, postfix)
+	if startIndexOfPostfix != -1 && startIndexOfPostfix == len(test)-len(postfix) {
 		return true
 	}
 	return false
@@ -53,17 +54,21 @@ func GetMigrationNamesFromFilenames(filenameList []string) ([]string, []error) {
 	for i := 0; i < len(filenameList); i++ {
 		var filenameWithoutExtension string
 		filename := filenameList[i]
-		if stringEndsWith(filename, ".up.sql") {
+		accepted := true
+		switch true {
+		case stringEndsWith(filename, ".up.sql"):
 			filenameWithoutExtension = filename[:len(filename)-len(".up.sql")]
-		} else if stringEndsWith(filename, ".down.sql") {
+		case stringEndsWith(filename, ".down.sql"):
 			filenameWithoutExtension = filename[:len(filename)-len(".down.sql")]
-		} else {
+		default:
 			rejectedFilenames = append(rejectedFilenames, fmt.Errorf("filename %s does not end with .{up, down}.sql", filename))
-			continue
+			accepted = false
 		}
-		if !stringSliceContains(acceptedFilenames, filenameWithoutExtension) {
-			if stringSliceContains(filenameList, filenameWithoutExtension+".up.sql") &&
-				stringSliceContains(filenameList, filenameWithoutExtension+".down.sql") {
+		acceptedBefore := stringSliceContains(acceptedFilenames, filenameWithoutExtension)
+		if accepted && !acceptedBefore {
+			migrationPairIsFound := stringSliceContains(filenameList, filenameWithoutExtension+".up.sql") &&
+				stringSliceContains(filenameList, filenameWithoutExtension+".down.sql")
+			if migrationPairIsFound {
 				acceptedFilenames = append(acceptedFilenames, filenameWithoutExtension)
 			} else {
 				rejectedFilenames = append(rejectedFilenames, fmt.Errorf("could not find reverse migration for %s", filename))
