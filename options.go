@@ -27,7 +27,7 @@ const (
 )
 
 // Options stores the database options that we use while establishing a connection
-// to the database
+// to the database, remember to update README.md if this gets updated!
 type Options struct {
 	// ConnectionName defines a local name of the connection, defaults to DefaultConnectionName
 	ConnectionName string

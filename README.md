@@ -8,45 +8,49 @@
 
 A Go package to handle database connections.
 
-Currently supports databases utilising the following protocols:
+This package is a convenience wrapper around other libraries and currently supports databases utilising the following protocols:
 
-1. MySQL
-2. PostgreSQL
-3. MSSQL
+1. MySQL ([`github.com/go-sql-driver/mysql`](https://github.com/go-sql-driver/mysql))
+2. PostgreSQL ([`github.com/lib/pq`](https://github.com/lib/pq))
+3. MSSQL ([`github.com/denisenkom/go-mssqldb`](https://github.com/denisenkom/go-mssqldb))
 
-| | |
-| --- | --- |
-| Github | [https://github.com/usvc/go-db](https://github.com/usvc/go-db) |
-| Gitlab | [https://gitlab.com/usvc/modules/go/db](https://gitlab.com/usvc/modules/go/db) |
+- **Github**: [https://github.com/usvc/go-db](https://github.com/usvc/go-db)
+- **Gitlab**: [https://gitlab.com/usvc/modules/go/db](https://gitlab.com/usvc/modules/go/db)
+
+> The main database tool by `usvc` can be found at [`github.com/usvc/db`](https://github.com/usvc/db) if that's what you were looking for
 
 - [DB](#db)
-  - [Usage](#usage)
-    - [Importing](#importing)
-    - [Creating a new database connection](#creating-a-new-database-connection)
-    - [Creating a new, named database connection](#creating-a-new-named-database-connection)
-    - [Retrieving a database connection](#retrieving-a-database-connection)
-    - [Retrieving a named database connection](#retrieving-a-named-database-connection)
-    - [Importing an existing connection](#importing-an-existing-connection)
-    - [Verifying a connection works](#verifying-a-connection-works)
-  - [Development Runbook](#development-runbook)
-    - [Getting Started](#getting-started)
-    - [Continuous Integration (CI) Pipeline](#continuous-integration-ci-pipeline)
-      - [On Github](#on-github)
-        - [Releasing](#releasing)
-      - [On Gitlab](#on-gitlab)
-        - [Version Bumping](#version-bumping)
-        - [DockerHub Publishing](#dockerhub-publishing)
-  - [Licensing](#licensing)
+- [Usage](#usage)
+  - [Importing](#importing)
+  - [Creating a new database connection](#creating-a-new-database-connection)
+  - [Creating a new, named database connection](#creating-a-new-named-database-connection)
+  - [Retrieving a database connection](#retrieving-a-database-connection)
+  - [Retrieving a named database connection](#retrieving-a-named-database-connection)
+  - [Importing an existing connection](#importing-an-existing-connection)
+  - [Verifying a connection works](#verifying-a-connection-works)
+- [Configuration](#configuration)
+  - [db.Options](#dboptions)
+- [Development Runbook](#development-runbook)
+  - [Getting Started](#getting-started)
+  - [Continuous Integration (CI) Pipeline](#continuous-integration-ci-pipeline)
+    - [On Github](#on-github)
+      - [Releasing](#releasing)
+    - [On Gitlab](#on-gitlab)
+      - [Version Bumping](#version-bumping)
+      - [DockerHub Publishing](#dockerhub-publishing)
+- [Licensing](#licensing)
 
-## Usage
+- - -
 
-### Importing
+# Usage
+
+## Importing
 
 ```go
 import "github.com/usvc/go-db"
 ```
 
-### Creating a new database connection
+## Creating a new database connection
 
 ```go
 if err := db.Init(Options{
@@ -60,7 +64,7 @@ if err := db.Init(Options{
 }
 ```
 
-### Creating a new, named database connection
+## Creating a new, named database connection
 
 ```go
 if err := db.Init(Options{
@@ -75,7 +79,7 @@ if err := db.Init(Options{
 }
 ```
 
-### Retrieving a database connection
+## Retrieving a database connection
 
 ```go
 // retrieve the 'default' connection
@@ -85,7 +89,7 @@ if connection == nil {
 }
 ```
 
-### Retrieving a named database connection
+## Retrieving a named database connection
 
 ```go
 // retrieve the 'non-default' connection
@@ -95,7 +99,7 @@ if connection == nil {
 }
 ```
 
-### Importing an existing connection
+## Importing an existing connection
 
 ```go
 var existingConnection *sql.DB
@@ -105,7 +109,7 @@ if err := db.Import(existingConnection, "default"); err != nil {
 }
 ```
 
-### Verifying a connection works
+## Verifying a connection works
 
 ```go
 var existingConnection *sql.DB
@@ -116,9 +120,26 @@ if err := db.Check("existing-connection"); err != nil {
 }
 ```
 
-## Development Runbook
+- - -
 
-### Getting Started
+# Configuration
+
+## `db.Options`
+
+- **`ConnectionName`** `string`: Defines a local name of the connection. Defaults to `"default"`
+- **`Hostname`** `string`: Defines the hostname where the database service can be reached. Defaults to `"127.0.0.1"`
+- **`Port`** `string`: Defines the port which the database service is listening on. Defaults to `uint16(3306)`
+- **`Username`** `string`: Defines the username of the user used to login to the database server. Defaults to `"user"`
+- **`Password`** `string`: Defines the password of the user represented in the Username property. Defaults to `"password"`
+- **`Database`** `string`: Defines the name of the database schema to use. Defaults to `"database"`
+- **`Driver`** `string`: Defines the database driver to use. One of `db.DriverMySQL`, `db.DriverPostgreSQL`, or `db.DriverMSSQL`. Defaults to `db.DriverMySQL`
+- **`Params`** `map[string]string`: Defines connection parameters to use in the data source name (DSN).
+
+- - -
+
+# Development Runbook
+
+## Getting Started
 
 1. Clone this repository
 2. Run `make deps` to pull in external dependencies
@@ -126,13 +147,13 @@ if err := db.Check("existing-connection"); err != nil {
 4. Run `make test` to ensure unit tests are passing
 5. Push
 
-### Continuous Integration (CI) Pipeline
+## Continuous Integration (CI) Pipeline
 
-#### On Github
+### On Github
 
 Github is used to deploy binaries/libraries because of it's ease of access by other developers.
 
-##### Releasing
+#### Releasing
 
 Releasing of the binaries can be done via Travis CI.
 
@@ -142,11 +163,11 @@ Releasing of the binaries can be done via Travis CI.
 4. Navigate to [travis-ci.org](https://travis-ci.org) and access the cooresponding repository there. Click on the **More options** button on the top right of the repository page and select **Settings**
 5. Scroll down to the section on **Environment Variables** and enter in a new **NAME** with `RELEASE_TOKEN` and the **VALUE** field cooresponding to the generated personal access token, and hit **Add**
 
-#### On Gitlab
+### On Gitlab
 
 Gitlab is used to run tests and ensure that builds run correctly.
 
-##### Version Bumping
+#### Version Bumping
 
 1. Run `make .ssh`
 2. Copy the contents of the file generated at `./.ssh/id_rsa.base64` into an environment variable named **`DEPLOY_KEY`** in **Settings > CI/CD > Variables**
@@ -154,7 +175,7 @@ Gitlab is used to run tests and ensure that builds run correctly.
 
 - **`DEPLOY_KEY`**: generate this by running `make .ssh` and copying the contents of the file generated at `./.ssh/id_rsa.base64`
 
-##### DockerHub Publishing
+#### DockerHub Publishing
 
 1. Login to [https://hub.docker.com](https://hub.docker.com), or if you're using your own private one, log into yours
 2. Navigate to [your security settings at the `/settings/security` endpoint](https://hub.docker.com/settings/security)
@@ -166,7 +187,9 @@ Gitlab is used to run tests and ensure that builds run correctly.
 - **`DOCKER_REGISTRY_USERNAME`**: The username you used to login to the Docker registry
 - **`DOCKER_REGISTRY_PASSWORD`**: The generated access token
 
-## Licensing
+- - -
+
+# Licensing
 
 Code in this package is licensed under the [MIT license (click to see full text))](./LICENSE)
 
