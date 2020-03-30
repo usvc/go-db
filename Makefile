@@ -50,8 +50,13 @@ load:
 publish_dockerhub:
 	docker push $(DOCKER_NAMESPACE)/$(DOCKER_IMAGE_NAME):latest
 
-see_ci:
+open_ci:
 	xdg-open https://gitlab.com/usvc/modules/go/db/pipelines
+	xdg-open https://travis-ci.org/github/usvc/go-db
+open_gitlab:
+	xdg-open https://gitlab.com/usvc/modules/go/db
+open_github:
+	xdg-open https://github.com/usvc/go-db
 
 .ssh:
 	mkdir -p ./.ssh
