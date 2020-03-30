@@ -38,6 +38,18 @@ func Check(optionalConnectionName ...string) error {
 	return nil
 }
 
+// Close closes a single database connection
+func Close(optionalConnectionName ...string) error {
+	connectionName := DefaultConnectionName
+	if len(optionalConnectionName) > 0 {
+		connectionName = optionalConnectionName[0]
+	}
+	if err := connection[connectionName].Close(); err != nil {
+		return fmt.Errorf("error while closing connection '%s': '%s'", connectionName, err)
+	}
+	return nil
+}
+
 // CloseAll attempts to close all established connections, returning
 // a list of errors in cases where the connection could not be closed.
 func CloseAll() []error {

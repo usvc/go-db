@@ -24,12 +24,13 @@ This package is a convenience wrapper around other libraries and currently suppo
   - [Importing](#importing)
   - [Creating a new database connection](#creating-a-new-database-connection)
   - [Creating a new, named database connection](#creating-a-new-named-database-connection)
-  - [Retrieving a database connection](#retrieving-a-database-connection)
-  - [Retrieving a named database connection](#retrieving-a-named-database-connection)
   - [Importing an existing connection](#importing-an-existing-connection)
   - [Verifying a connection works](#verifying-a-connection-works)
+  - [Retrieving a database connection](#retrieving-a-database-connection)
+  - [Closing a database connection](#closing-a-database-connection)
+  - [Closing all connections](#closing-all-connections)
 - [Configuration](#configuration)
-  - [db.Options](#dboptions)
+  - [`db.Options`](#dboptions)
 - [Development Runbook](#development-runbook)
   - [Getting Started](#getting-started)
   - [Continuous Integration (CI) Pipeline](#continuous-integration-ci-pipeline)
@@ -52,6 +53,8 @@ import "github.com/usvc/go-db"
 
 ## Creating a new database connection
 
+The following registers a new connection instance (but does not estabish a connection):
+
 ```go
 if err := db.Init(Options{
   Username: "user",
@@ -66,9 +69,11 @@ if err := db.Init(Options{
 
 ## Creating a new, named database connection
 
+The following registers a new connection instance (but does not estabish a connection) named `"my-connection"`:
+
 ```go
 if err := db.Init(Options{
-  ConnectionName: "non-default",
+  ConnectionName: "my-connection",
   Username: "user",
   Password: "password",
   Database: "schema",
@@ -79,7 +84,33 @@ if err := db.Init(Options{
 }
 ```
 
+## Importing an existing connection
+
+The following imports an existing `*sql.DB` connection and names it `"connection-name"`
+
+```go
+var existingConnection *sql.DB
+// ... initialise `existingConnection` by other means ...
+if err := db.Import(existingConnection, "connection-name"); err != nil {
+  log.Printf("connection 'connection-name' seems to already exist: %s\n", err)
+}
+```
+
+## Verifying a connection works
+
+The following checks if the connection instance named `"existing-connection"` can establish a connection to the database server:
+
+```go
+var existingConnection *sql.DB
+// ... initialise `existingConnection` by other means ...
+if err := db.Check("existing-connection"); err != nil {
+  log.Printf("connection 'existing-connection' could not connect: %s\n", err)
+}
+```
+
 ## Retrieving a database connection
+
+The following retrieves the default `*sql.DB` connection instance:
 
 ```go
 // retrieve the 'default' connection
@@ -89,34 +120,46 @@ if connection == nil {
 }
 ```
 
-## Retrieving a named database connection
+The following retrieves the `*sql.DB` connection instance named `"my-connection"`:
 
 ```go
-// retrieve the 'non-default' connection
-connection := db.Get("non-default")
+// retrieve the connection with name 'my-connection'
+connection := db.Get("my-connection")
 if connection == nil {
-  log.Println("connection 'non-default' does not exist")
+  log.Println("connection 'my-connection' does not exist")
 }
 ```
 
-## Importing an existing connection
+## Closing a database connection
+
+The following closes the default database connection:
 
 ```go
-var existingConnection *sql.DB
-// ... initialise `existingConnection` by other means ...
-if err := db.Import(existingConnection, "default"); err != nil {
-  log.Printf("connection 'default' seems to already exist: %s\n", err)
+// ... run db.Init ...
+if err := db.Close(); err != nil {
+  log.Println("the default connection could not be closed")
 }
 ```
 
-## Verifying a connection works
+The following closes the database connection named `"my-connection"`:
 
 ```go
-var existingConnection *sql.DB
-// ... initialise `existingConnection` by other means ...
-db.Import(existingConnection, "existing-connection")
-if err := db.Check("existing-connection"); err != nil {
-  log.Printf("connection 'existing-connection' could not connect: %s\n", err)
+// ... run db.Init for a connection named 'my-connection'...
+if err := db.Close("my-connection"); err != nil {
+  log.Println("the connection named 'my-connection' could not be closed")
+}
+```
+
+## Closing all connections
+
+The following closes all database connections:
+
+```go
+// ... run db.Init for a connection named 'my-connection'...
+if err := db.Close("my-connection"); err != nil {
+  for i := 0; i < len(err); i++ {
+    log.Println(err[i])
+  }
 }
 ```
 
